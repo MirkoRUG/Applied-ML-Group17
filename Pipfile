@@ -7,6 +7,8 @@ name = "pypi"
 pre-commit = "*"
 
 [dev-packages]
+jupyter = "*"
+notebook = "*"
 
 [requires]
 python_version = "3.10"
