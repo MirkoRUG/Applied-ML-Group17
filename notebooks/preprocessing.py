@@ -8,7 +8,7 @@ from CustomTransformer import TopCategoryEncoder
 import pandas as pd
 
 
-movies = pd.read_csv('data.csv')
+movies = pd.read_csv("movie socre prediction/data/data.csv")
 df = movies.dropna(subset=["score"])
 X = df.drop(["name", "score", "released", "votes", "gross", "country"], axis=1)
 y = df["score"]
