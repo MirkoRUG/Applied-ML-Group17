@@ -27,7 +27,10 @@ X_test[categories] = X_test[categories].astype(str)
 
 
 # Train model
-model.fit(X_train, y_train, eval_set=(X_test, y_test), cat_features=categories)
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,
+                                                  test_size=0.2,
+                                                  random_state=42)
+model.fit(X_train, y_train, eval_set=(X_val, y_val), cat_features=categories)
 
 # Predict
 y_pred = model.predict(X_test)
