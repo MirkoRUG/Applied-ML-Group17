@@ -5,7 +5,7 @@ from catboost import CatBoostRegressor
 
 # Load data
 movies = pd.read_csv("data.csv")
-movies = movies.dropna(subset=["score"])
+movies = movies.dropna(subset=["score", "votes", "gross"])
 X = movies.drop("score", axis=1)
 y = movies["score"]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
