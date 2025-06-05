@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
-import pandas as pd
-from catboost import CatBoostRegressor
+import os
+
+from project_name.models.catboost_model import get_model
 
 # Initialize app
 app = FastAPI(
@@ -11,66 +12,66 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Define categorical columns
-categorical = ["name", "rating", "genre", "released", "director", "writer",
-               "star", "country", "company"]
+# Model path
+MODEL_PATH = "models/catboost_movie_model.cbm"
 
-# Load and prepare data, then train model
+# Load model at startup
 try:
-    data = pd.read_csv("data.csv").dropna(subset=["score", "votes", "gross"])
-    X = data.drop(columns=["score"])
-    y = data["score"]
-    X[categorical] = X[categorical].astype(str)
-
-    expected_columns = list(X.columns)
-
-    model = CatBoostRegressor(
-        iterations=100,
-        learning_rate=0.1,
-        depth=6,
-        loss_function='RMSE',
-        verbose=0
-    )
-    model.fit(X, y, cat_features=categorical)
-
+    if os.path.exists(MODEL_PATH):
+        predictor = get_model(MODEL_PATH)
+        print(f"Model loaded successfully from {MODEL_PATH}")
+    else:
+        print(f"Warning: Model file not found at {MODEL_PATH}")
+        print("Please run 'python train_model.py' to train and save a model first.")
+        predictor = None
 except Exception as e:
-    raise RuntimeError(f"Failed to initialize model: {e}")
+    print(f"Failed to load model: {e}")
+    predictor = None
 
 # Input and Output Schemas
 class MovieFeatures(BaseModel):
     name: str = Field(..., example="Inception")
     rating: str = Field(..., example="PG-13")
     genre: str = Field(..., example="Sci-Fi")
-    released: str = Field(..., example="2010")
+    year: Optional[int] = Field(None, example=2010)
+    released: str = Field(..., example="July 16, 2010 (United States)")
     director: str = Field(..., example="Christopher Nolan")
     writer: str = Field(..., example="Jonathan Nolan")
     star: str = Field(..., example="Leonardo DiCaprio")
     country: str = Field(..., example="USA")
+    budget: Optional[float] = Field(None, example=160000000.0)
     company: str = Field(..., example="Warner Bros.")
     runtime: Optional[float] = Field(None, example=148.0)
-    votes: Optional[float] = Field(None, example=2000000.0)
-    gross: Optional[float] = Field(None, example=829895144.0)
 
 class PredictionResponse(BaseModel):
     predicted_score: float
 
+# Health check endpoint
+@app.get("/health")
+def health_check():
+    """Check if the API and model are working."""
+    if predictor is None:
+        return {"status": "unhealthy", "message": "Model not loaded"}
+    return {"status": "healthy", "message": "API and model are working"}
+
 # Prediction endpoint
 @app.post("/predict", response_model=PredictionResponse, summary="Predict movie score")
 def predict(features: MovieFeatures):
+    """Predict movie score based on input features."""
+    if predictor is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model not loaded. Please train and save a model first using 'python train_model.py'"
+        )
+
     try:
-        input_df = pd.DataFrame([features.dict()])
-        input_df[categorical] = input_df[categorical].astype(str)
+        # Convert input to dictionary
+        input_data = features.model_dump()
 
-        # Add missing columns with default values
-        for col in expected_columns:
-            if col not in input_df.columns:
-                input_df[col] = 0
+        # Make prediction using the loaded model
+        prediction = predictor.predict(input_data)
 
-        # Reorder columns to match training data
-        input_df = input_df[expected_columns]
-
-        prediction = model.predict(input_df)
-        return PredictionResponse(predicted_score=round(float(prediction[0]), 2))
+        return PredictionResponse(predicted_score=round(float(prediction), 2))
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction failed: {str(e)}")
