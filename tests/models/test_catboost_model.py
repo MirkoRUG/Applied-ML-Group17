@@ -10,7 +10,7 @@ import os
 # Add the project root to the path so we can import project modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from project_name.models.catboost_model import get_model, make_prediction
+from movie_score_predictor.models.catboost_model import get_model, make_prediction
 
 
 class TestCatBoostModel(unittest.TestCase):

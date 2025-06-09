@@ -9,7 +9,7 @@ import argparse
 import json
 from datetime import datetime
 
-from project_name.models.catboost_model import train_and_save_model
+from movie_score_predictor.models.catboost_model import train_and_save_model
 
 
 def main():
