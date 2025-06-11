@@ -3,11 +3,11 @@
 #SBATCH --time=03:00:00                    # 3 hours time limit
 #SBATCH --cpus-per-task=24                 # 24 CPU cores for parallel processing
 #SBATCH --mem=24G                          # 24GB RAM
-#SBATCH --partition=cpu                    # Use CPU partition (adjust if needed)
+# Note: Partition line removed - will use default partition
 #SBATCH --output=hyperparam_tuning_%j.out  # Output file with job ID
 #SBATCH --error=hyperparam_tuning_%j.err   # Error file with job ID
 #SBATCH --mail-type=BEGIN,END,FAIL         # Email notifications (optional)
-#SBATCH --mail-user=your_email@university.edu  # Replace with your email
+#SBATCH --mail-user=s5200954@student.rug.nl  # Replace with your email if desired
 
 # Print job information
 echo "=========================================="
