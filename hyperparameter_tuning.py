@@ -76,9 +76,12 @@ class HyperparameterOptimizer:
             y_train, y_val = self.y.iloc[train_idx], self.y.iloc[val_idx]
 
             try:
-                # Create and train model
-                predictor = MovieScorePredictor(model_params=params)
-                predictor.model.fit(
+                # Create CatBoost model directly (bypass MovieScorePredictor initialization issue)
+                from catboost import CatBoostRegressor
+                model = CatBoostRegressor(**params)
+
+                # Train the model
+                model.fit(
                     X_train, y_train,
                     cat_features=self.cat_features_indices,
                     eval_set=(X_val, y_val),
@@ -87,7 +90,7 @@ class HyperparameterOptimizer:
                 )
 
                 # Calculate validation RMSE
-                y_pred = predictor.model.predict(X_val)
+                y_pred = model.predict(X_val)
                 rmse = np.sqrt(mean_squared_error(y_val, y_pred))
                 cv_scores.append(rmse)
 
