@@ -22,34 +22,27 @@ warnings.filterwarnings('ignore')
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
-def optimize_hyperparameters(data_path="data.csv", n_trials=100, cv_folds=5, random_seed=42):
-    """
-    Run hyperparameter optimization for CatBoost model.
+class HyperparameterOptimizer:
+    """Hyperparameter optimizer for CatBoost model."""
 
-    Args:
-        data_path: Path to training data CSV
-        n_trials: Number of optimization trials
-        cv_folds: Number of cross-validation folds
-        random_seed: Random seed for reproducibility
+    def __init__(self, data_path="data.csv", cv_folds=5, random_seed=42):
+        """Initialize the optimizer."""
+        print(f"Loading data from {data_path}...")
+        df = pd.read_csv(data_path)
+        self.X, self.y = prepare_features_and_target(df, "score")
 
-    Returns:
-        Dictionary with optimization results
-    """
-    print(f"Loading data from {data_path}...")
-    df = pd.read_csv(data_path)
-    X, y = prepare_features_and_target(df, "score")
+        # Get categorical features
+        categorical_features = get_categorical_features()
+        self.cat_features_indices = [i for i, col in enumerate(self.X.columns) if col in categorical_features]
 
-    # Get categorical features
-    categorical_features = get_categorical_features()
-    cat_features_indices = [i for i, col in enumerate(X.columns) if col in categorical_features]
+        print(f"Dataset: {len(self.X)} samples, {len(self.X.columns)} features")
+        print(f"Categorical features: {len(self.cat_features_indices)}")
 
-    print(f"Dataset: {len(X)} samples, {len(X.columns)} features")
-    print(f"Categorical features: {len(cat_features_indices)}")
+        # Initialize cross-validation
+        self.cv = KFold(n_splits=cv_folds, shuffle=True, random_state=random_seed)
+        self.random_seed = random_seed
 
-    # Initialize cross-validation
-    cv = KFold(n_splits=cv_folds, shuffle=True, random_state=random_seed)
-
-    def define_search_space(trial):
+    def define_search_space(self, trial):
         """Define hyperparameter search space for CatBoost."""
         return {
             # Core hyperparameters (compatible with train_model.py arguments)
@@ -68,26 +61,26 @@ def optimize_hyperparameters(data_path="data.csv", n_trials=100, cv_folds=5, ran
 
             # Fixed parameters
             'loss_function': 'RMSE',
-            'random_seed': random_seed,
+            'random_seed': self.random_seed,
             'verbose': False,
             'early_stopping_rounds': 50
         }
 
-    def objective(trial):
+    def objective(self, trial):
         """Objective function for Optuna optimization."""
-        params = define_search_space(trial)
+        params = self.define_search_space(trial)
 
         cv_scores = []
-        for fold, (train_idx, val_idx) in enumerate(cv.split(X)):
-            X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
-            y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+        for fold, (train_idx, val_idx) in enumerate(self.cv.split(self.X)):
+            X_train, X_val = self.X.iloc[train_idx], self.X.iloc[val_idx]
+            y_train, y_val = self.y.iloc[train_idx], self.y.iloc[val_idx]
 
             try:
                 # Create and train model
                 predictor = MovieScorePredictor(model_params=params)
                 predictor.model.fit(
                     X_train, y_train,
-                    cat_features=cat_features_indices,
+                    cat_features=self.cat_features_indices,
                     eval_set=(X_val, y_val),
                     use_best_model=True,
                     verbose=False
@@ -110,27 +103,47 @@ def optimize_hyperparameters(data_path="data.csv", n_trials=100, cv_folds=5, ran
 
         return mean_cv_score
 
-    print(f"\nStarting hyperparameter optimization with {n_trials} trials...")
+    def optimize(self, n_trials=100):
+        """Run the optimization."""
+        print(f"\nStarting hyperparameter optimization with {n_trials} trials...")
 
-    # Create Optuna study
-    study = optuna.create_study(
-        direction='minimize',
-        sampler=optuna.samplers.TPESampler(seed=random_seed),
-        pruner=optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=5)
-    )
+        # Create Optuna study
+        study = optuna.create_study(
+            direction='minimize',
+            sampler=optuna.samplers.TPESampler(seed=self.random_seed),
+            pruner=optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=5)
+        )
 
-    # Run optimization
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+        # Run optimization
+        study.optimize(self.objective, n_trials=n_trials, show_progress_bar=True)
 
-    print(f"\nOptimization completed!")
-    print(f"Best CV RMSE: {study.best_value:.4f}")
+        print(f"\nOptimization completed!")
+        print(f"Best CV RMSE: {study.best_value:.4f}")
 
-    return {
-        'best_params': study.best_params,
-        'best_cv_score': study.best_value,
-        'n_trials': len(study.trials),
-        'study': study
-    }
+        return {
+            'best_params': study.best_params,
+            'best_cv_score': study.best_value,
+            'n_trials': len(study.trials),
+            'study': study
+        }
+
+
+def optimize_hyperparameters(data_path="data.csv", n_trials=100, cv_folds=5, random_seed=42):
+    """
+    Run hyperparameter optimization for CatBoost model.
+
+    Args:
+        data_path: Path to training data CSV
+        n_trials: Number of optimization trials
+        cv_folds: Number of cross-validation folds
+        random_seed: Random seed for reproducibility
+
+    Returns:
+        Dictionary with optimization results
+    """
+    optimizer = HyperparameterOptimizer(data_path, cv_folds, random_seed)
+    return optimizer.optimize(n_trials)
+
 
 def save_results(results, output_file="hyperparameter_results.json"):
     """Save optimization results to JSON file."""
