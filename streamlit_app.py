@@ -119,6 +119,7 @@ def main():
 
             # Make prediction
             with st.spinner("Calculating prediction..."):
+                assert model is not None
                 prediction = model.predict(inputs)
 
             # Display results
