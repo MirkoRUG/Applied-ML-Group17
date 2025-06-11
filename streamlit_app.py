@@ -1,5 +1,9 @@
 import streamlit as st
-from notebooks.temp_model import get_model, make_prediction
+from movie_score_predictor.models.catboost_model import get_model
+
+
+# Model path
+MODEL_PATH = "models/catboost_movie_model.cbm"
 
 # App configuration
 st.set_page_config(page_title="Movie Score Predictor", page_icon="🎬")
@@ -9,7 +13,7 @@ st.set_page_config(page_title="Movie Score Predictor", page_icon="🎬")
 @st.cache_resource  # Cache the model load
 def load_model():
     try:
-        model = get_model()  # Call your actual model loading function
+        model = get_model(MODEL_PATH)
         st.success("✅ Model loaded successfully!")
         return model
     except Exception as e:
@@ -18,7 +22,7 @@ def load_model():
 
 
 def main():
-    st.title("🎬 Movie Score Predictor")
+    st.title("Movie Score Predictor")
     st.write("Predict a movie's score based on its details")
 
     with st.sidebar:
@@ -59,19 +63,30 @@ def main():
                 index=2,
                 help="Main genre of the movie"
             )
-            released = st.text_input("Release Year*",
-                                     help="Year of the movie's release",
-                                     value="2010")
+            year = st.number_input("Release Year*",
+                                   min_value=1970,
+                                   max_value=2025,
+                                   help="Year of the movie's release",
+                                   value=2010)
             runtime = st.number_input("Runtime*", min_value=1,
                                       max_value=300, value=148,
                                       help="Length of the movie in minutes")
+            budget = st.number_input("Budget",
+                                     min_value=1000,
+                                     max_value=1000000000,
+                                     value=160000000,
+                                     help="Budget of the movie in USD")
 
         with col2:
             director = st.text_input("Director", "Christopher Nolan")
             writer = st.text_input("Writer", "Christopher Nolan")
             star = st.text_input("Main Star", "Leonardo DiCaprio")
-            country = st.selectbox("Country", "United States")
+            country = st.text_input("Country", "United States")
             company = st.text_input("Production Company", "Warner Bros.")
+            released = st.text_input("Release Date",
+                                     help="Date and country of the first \
+                                           movie release",
+                                     value="July 16, 2010 (United States)")
 
         # Required fields notice
         st.caption("* Required fields")
@@ -81,7 +96,7 @@ def main():
     # Handle form submission
     if submitted:
         # Validate required fields
-        if not all([name, rating, genre, released, runtime]):
+        if not all([name, rating, genre, released, year, runtime]):
             st.error("Please fill in all required fields")
             return
 
@@ -91,18 +106,20 @@ def main():
                 "name": name,
                 "rating": rating,
                 "genre": genre,
+                "year": float(year),
                 "released": released,
                 "director": director,
                 "writer": writer,
                 "star": star,
                 "country": country,
+                "budget": float(budget),
                 "company": company,
                 "runtime": float(runtime)
             }
 
             # Make prediction
             with st.spinner("Calculating prediction..."):
-                prediction = make_prediction(model, inputs)
+                prediction = model.predict(inputs)
 
             # Display results
             st.success(f"Predicted Score: **{prediction:.1f}/10**")
