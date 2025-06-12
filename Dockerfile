@@ -1,20 +1,17 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Set work directory
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
+# Copy requirements and install
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
-COPY main.py .
-COPY train_model.py .
-COPY movie_score_predictor/ movie_score_predictor/
-COPY models/ models/
+# Copy the entire project
+COPY . .
 
-# Expose FastAPI port
-EXPOSE 8000
+# Expose Streamlit default port
+EXPOSE 8501
 
-# Run the API
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Streamlit
+CMD ["streamlit", "run", "main.py", "--server.enableCORS=false"]

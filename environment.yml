@@ -11,3 +11,4 @@ dependencies:
   - scikit-learn
   - pydantic
   - python-dotenv
+  - streamlit
