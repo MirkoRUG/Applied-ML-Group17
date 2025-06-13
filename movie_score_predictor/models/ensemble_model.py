@@ -34,7 +34,7 @@ class MovieScoreEnsemblePredictor:
             params['random_seed'] = 42 + i
             # Vary parameters slightly
             params['learning_rate'] *= 0.9 + 0.2 * (i % 3)
-            params['depth'] += i % 2 - 0.5
+            params['depth'] += i % 2 + 1
             models.append(params)
         return models
 
@@ -60,7 +60,7 @@ class MovieScoreEnsemblePredictor:
         rmse = np.sqrt(np.mean((y - avg_preds) ** 2))
         return {'rmse': rmse}
 
-    def predict(self, data, return_std=False):
+    def predict(self, data, return_uncertainty=False):
         if not self.models or not self.feature_cols:
             return None
 
@@ -79,7 +79,7 @@ class MovieScoreEnsemblePredictor:
         preds = np.array([model.predict(data) for model in self.models])
         mean_preds = np.mean(preds, axis=0)
 
-        if return_std:
+        if return_uncertainty:
             std = np.std(preds, axis=0)
             if len(mean_preds) == 1:
                 return float(mean_preds[0]), float(std[0])
