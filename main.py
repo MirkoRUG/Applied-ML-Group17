@@ -3,7 +3,7 @@ from movie_score_predictor.models.catboost_model import get_model
 
 
 # Model path
-MODEL_PATH = "models/catboost_movie_model.cbm"
+MODEL_PATH = "models/test_model.cbm"
 
 # App configuration
 st.set_page_config(page_title="Movie Score Predictor", page_icon="🎬")
