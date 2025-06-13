@@ -13,8 +13,9 @@ st.set_page_config(page_title="Movie Score Predictor", page_icon="🎬")
 @st.cache_resource
 def load_model():
     try:
-        from movie_score_predictor.models.catboost_model import get_model
-        model = get_model("models/catboost_movie_model.cbm")
+        model = MovieScoreEnsemblePredictor(n_models=3)
+        df = pd.read_csv("data.csv")
+        model.train(df)
         return model
     except Exception as e:
         st.error(f"Model loading failed: {e}")
