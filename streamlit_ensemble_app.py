@@ -4,7 +4,6 @@ import pandas as pd
 from movie_score_predictor.models.ensemble_model \
     import MovieScoreEnsemblePredictor
 
-# Constants
 API_KEY = "dcbe7f561670aeffbe72a416d3c16a08"
 BASE_URL = "https://api.themoviedb.org/3"
 
@@ -13,7 +12,6 @@ st.set_page_config(page_title="Movie Score Predictor", page_icon="🎬")
 
 @st.cache_resource
 def load_model():
-    """Load and train the ensemble model."""
     try:
         model = MovieScoreEnsemblePredictor(n_models=3)
         df = pd.read_csv("data.csv")
@@ -32,15 +30,12 @@ def api_request(url, params):
 
 
 def get_movie_features(movie_data, credits_data):
-    """Extract required features from TMDB data."""
     if not movie_data or not credits_data:
         return None
 
-    # Basic info
     release_date = movie_data.get('release_date', '')
     year = int(release_date[:4]) if release_date else None
 
-    # Crew info
     crew = credits_data.get('crew', [])
     director = next(
         (p['name'] for p in crew if p.get('job') == 'Director'),
@@ -53,7 +48,7 @@ def get_movie_features(movie_data, credits_data):
 
     return {
         'name': movie_data.get('title', 'Unknown'),
-        'rating': 'PG-13',  # Default, TMDb does not contain MPA rating
+        'rating': 'PG-13',
         'genre': movie_data.get('genres', [{}])[0].get('name', 'Unknown'),
         'year': year,
         'released': release_date,
@@ -71,7 +66,6 @@ def get_movie_features(movie_data, credits_data):
 
 
 def show_prediction(prediction, confidence):
-    """Display prediction results."""
     uncertainty = "Low 🟢" if confidence < 0.2 else "Medium 🟡"\
         if confidence < 0.5 else "High 🔴"
 
@@ -86,7 +80,6 @@ def show_prediction(prediction, confidence):
 
 
 def show_movie_details(features):
-    """Show all the features fetched from TMDb"""
     with st.expander("Full Movie Details", expanded=True):
         col1, col2 = st.columns(2)
 
@@ -105,7 +98,6 @@ def show_movie_details(features):
             st.markdown(f"**Star:** {features['star']}")
             st.markdown(f"**Production Company:** {features['company']}")
 
-        # Bottom section
         st.markdown("---")
         st.markdown(f"**Country:** {features['country']}")
         if features['budget']:
@@ -115,7 +107,6 @@ def show_movie_details(features):
 
 
 def main():
-    """Main app interface."""
     st.title("Movie Score Predictor")
     st.write("Search for any movie to get a score prediction")
 
@@ -123,13 +114,11 @@ def main():
     if not model:
         st.stop()
 
-    # Search interface
     query = st.text_input("Search movies:", placeholder="e.g., Inception")
 
     if not query:
         return
 
-    # Search TMDB
     with st.spinner("Searching..."):
         results = api_request(
             f"{BASE_URL}/search/movie",
@@ -140,8 +129,7 @@ def main():
         st.warning("No movies found")
         return
 
-    # Movie selection
-    movies = results['results'][:5]  # Show top 5
+    movies = results['results'][:5]
     selection = st.selectbox(
         "Select movie:",
         movies,
@@ -152,7 +140,6 @@ def main():
     if not st.button("Predict Score"):
         return
 
-    # Fetch details
     with st.spinner("Fetching details..."):
         movie_id = selection['id']
         movie_data = api_request(
@@ -168,7 +155,6 @@ def main():
         st.error("Failed to fetch details")
         return
 
-    # Show info and predict
     features = get_movie_features(movie_data, credits_data)
     if not features:
         st.error("Failed to process features")

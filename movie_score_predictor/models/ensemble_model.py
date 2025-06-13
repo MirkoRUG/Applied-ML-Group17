@@ -6,7 +6,6 @@ from ..data.preprocessing import prepare_features_and_target, \
 
 
 class MovieScoreEnsemblePredictor:
-    """Basic ensemble model for movie score prediction"""
 
     def __init__(self, n_models=3, model_params=None):
         self.n_models = n_models
@@ -14,7 +13,7 @@ class MovieScoreEnsemblePredictor:
         self.cat_features = get_categorical_features()
         self.feature_cols = None
 
-        # Basic model settings
+        # base settings
         self.base_params = {
             'iterations': 1000,
             'learning_rate': 0.1,
@@ -32,7 +31,7 @@ class MovieScoreEnsemblePredictor:
         for i in range(self.n_models):
             params = self.base_params.copy()
             params['random_seed'] = 42 + i
-            # Vary parameters slightly
+            # vary params slightly
             params['learning_rate'] *= 0.9 + 0.2 * (i % 3)
             params['depth'] += i % 2 + 1
             models.append(params)
@@ -42,7 +41,7 @@ class MovieScoreEnsemblePredictor:
         X, y = prepare_features_and_target(df, target_col)
         self.feature_cols = list(X.columns)
 
-        # Get categorical feature indices
+        # get cat indices
         cat_indices = [i for i, col in enumerate(X.columns)
                        if col in self.cat_features]
 
@@ -54,7 +53,7 @@ class MovieScoreEnsemblePredictor:
             model.fit(X, y, cat_features=cat_indices)
             self.models.append(model)
 
-        # Calculate training error
+        # calc error
         preds = np.array([model.predict(X) for model in self.models])
         avg_preds = np.mean(preds, axis=0)
         rmse = np.sqrt(np.mean((y - avg_preds) ** 2))
@@ -69,7 +68,7 @@ class MovieScoreEnsemblePredictor:
 
         data = clean_and_prepare_data(data)
 
-        # Ensure all columns are present
+        # ensure columns present
         for col in self.feature_cols:
             if col not in data.columns:
                 data[col] = 'Unknown' if col in self.cat_features else 0

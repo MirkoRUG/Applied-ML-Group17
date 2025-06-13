@@ -22,20 +22,17 @@ def preprocess_date_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
     
-    # Extract date information from 'released' column
-    if 'released' in df.columns:
-        # Parse the released date string to extract components
-        df['release_year'] = df['released'].apply(extract_year_from_release)
-        df['release_month'] = df['released'].apply(extract_month_from_release)
-        df['release_day'] = df['released'].apply(extract_day_from_release)
-        
-        # Create additional date features
-        df['is_summer_release'] = df['release_month'].apply(lambda x: 1 if x in [6, 7, 8] else 0)
-        df['is_holiday_release'] = df['release_month'].apply(lambda x: 1 if x in [11, 12] else 0)
-        df['is_spring_release'] = df['release_month'].apply(lambda x: 1 if x in [3, 4, 5] else 0)
-        
-        # Calculate days since epoch for temporal ordering
-        df['days_since_epoch'] = df['released'].apply(calculate_days_since_epoch)
+    # # date preprocessing disabled
+    # if 'released' in df.columns:
+    #     df['release_year'] = df['released'].apply(extract_year_from_release)
+    #     df['release_month'] = df['released'].apply(extract_month_from_release)
+    #     df['release_day'] = df['released'].apply(extract_day_from_release)
+    #     
+    #     df['is_summer_release'] = df['release_month'].apply(lambda x: 1 if x in [6, 7, 8] else 0)
+    #     df['is_holiday_release'] = df['release_month'].apply(lambda x: 1 if x in [11, 12] else 0)
+    #     df['is_spring_release'] = df['release_month'].apply(lambda x: 1 if x in [3, 4, 5] else 0)
+    #     
+    #     df['days_since_epoch'] = df['released'].apply(calculate_days_since_epoch)
     
     return df
 
@@ -55,7 +52,7 @@ def extract_year_from_release(release_str: str) -> int:
 def extract_month_from_release(release_str: str) -> int:
     """Extract month from release date string."""
     if pd.isna(release_str):
-        return 6  # Default month (June)
+        return 6
     
     month_mapping = {
         'january': 1, 'february': 2, 'march': 3, 'april': 4,
@@ -142,6 +139,15 @@ def convert_data_types(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def filter_frequent_categorical(df: pd.DataFrame, min_count: int = 2) -> pd.DataFrame:
+    # only keep directors/stars that appear 2+ times
+    for col in ['director', 'star']:
+        if col in df.columns:
+            value_counts = df[col].value_counts()
+            frequent_values = value_counts[value_counts >= min_count].index
+            df[col] = df[col].where(df[col].isin(frequent_values), 'Other')
+    return df
+
 def clean_and_prepare_data(df: pd.DataFrame, drop_columns: List[str] = None) -> pd.DataFrame:
     """
     Clean and prepare the dataset for model training.
@@ -161,8 +167,9 @@ def clean_and_prepare_data(df: pd.DataFrame, drop_columns: List[str] = None) -> 
     # Apply data type conversions
     df = convert_data_types(df)
     
-    # Apply date preprocessing
-    df = preprocess_date_features(df)
+    # df = preprocess_date_features(df)  # disabled
+    
+    df = filter_frequent_categorical(df)
     
     # Drop specified columns
     columns_to_drop = [col for col in drop_columns if col in df.columns]

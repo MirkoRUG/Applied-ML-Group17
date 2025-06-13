@@ -1,6 +1,3 @@
-"""
-Script to train and save the CatBoost movie score prediction model.
-"""
 
 import pandas as pd
 import numpy as np
@@ -13,7 +10,6 @@ from movie_score_predictor.models.catboost_model import train_and_save_model
 
 
 def main():
-    """Main function to train and save the model."""
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Train CatBoost movie score prediction model')
@@ -30,7 +26,6 @@ def main():
     
     args = parser.parse_args()
     
-    # Custom model parameters
     model_params = {
         'iterations': args.iterations,
         'learning_rate': args.learning_rate,
@@ -47,7 +42,6 @@ def main():
     print(f"Model parameters: {model_params}")
     
     try:
-        # Train and save model
         metrics = train_and_save_model(
             data_path=args.data_path,
             model_path=args.model_path,
@@ -60,14 +54,12 @@ def main():
         print(f"Number of features: {metrics['n_features']}")
         print(f"Number of training samples: {metrics['n_samples']}")
         
-        # Print top 10 most important features
         print("\nTop 10 most important features:")
         feature_importance = metrics['feature_importance']
         sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
         for i, (feature, importance) in enumerate(sorted_features[:10]):
             print(f"{i+1:2d}. {feature:<20} {importance:.4f}")
         
-        # Save training report
         report_path = args.model_path.replace('.cbm', '_training_report.json')
         training_report = {
             'timestamp': datetime.now().isoformat(),
