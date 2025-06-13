@@ -23,9 +23,13 @@ class MovieScorePredictor:
         
         # default params
         self.model_params = {
-            'iterations': 1000,
-            'learning_rate': 0.1,
-            'depth': 6,
+            'iterations': 1693,
+            'learning_rate': 0.044331294432223556,
+            'depth': 9,
+            'l2_leaf_reg': 1.5505392495379244,
+            'random_strength': 6.899585073807783,
+            'bagging_temperature': 0.7172140740060781,
+            'border_count': 73,
             'loss_function': 'RMSE',
             'verbose': False,
             'random_seed': 42,
