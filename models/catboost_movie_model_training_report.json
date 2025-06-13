@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-06-09T13:36:48.169638",
+  "data_path": "data.csv",
+  "model_path": "models/catboost_movie_model.cbm",
+  "model_params": {
+    "iterations": 1000,
+    "learning_rate": 0.1,
+    "depth": 6,
+    "loss_function": "RMSE",
+    "verbose": true,
+    "random_seed": 42,
+    "early_stopping_rounds": 50
+  },
+  "metrics": {
+    "train_rmse": 0.6052019587703552,
+    "train_mae": 0.44842599205447314,
+    "feature_importance": {
+      "name": 0.0,
+      "rating": 6.362706954498807,
+      "genre": 12.489365619197413,
+      "year": 2.6241017983603405,
+      "released": 0.24911724380376463,
+      "director": 14.648913521955171,
+      "writer": 4.516634629561742,
+      "star": 6.643059674334256,
+      "country": 11.275088056359083,
+      "budget": 8.263826410070852,
+      "company": 4.08549604686254,
+      "runtime": 19.73682642276617,
+      "release_year": 3.079246279730569,
+      "release_month": 0.681076749839317,
+      "release_day": 1.3462573246429237,
+      "is_summer_release": 0.12837527060455992,
+      "is_holiday_release": 0.19627040629668885,
+      "is_spring_release": 0.14066906233280113,
+      "days_since_epoch": 3.5329685287830306
+    },
+    "n_features": 19,
+    "n_samples": 7665
+  }
+}

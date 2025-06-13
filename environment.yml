@@ -1,0 +1,14 @@
+name: movieapi
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - fastapi
+  - uvicorn
+  - pandas
+  - catboost
+  - scikit-learn
+  - pydantic
+  - python-dotenv
+  - streamlit
