@@ -76,7 +76,6 @@ class HyperparameterOptimizer:
             y_train, y_val = self.y.iloc[train_idx], self.y.iloc[val_idx]
 
             try:
-                # Create CatBoost model directly (bypass MovieScorePredictor initialization issue)
                 from catboost import CatBoostRegressor
                 model = CatBoostRegressor(**params)
 

@@ -9,7 +9,6 @@ MODEL_PATH = "models/catboost_movie_model.cbm"
 st.set_page_config(page_title="Movie Score Predictor", page_icon="🎬")
 
 
-# Load your model (modify this function with your actual loading code)
 @st.cache_resource  # Cache the model load
 def load_model():
     try:
@@ -84,8 +83,7 @@ def main():
             country = st.text_input("Country", "United States")
             company = st.text_input("Production Company", "Warner Bros.")
             released = st.text_input("Release Date",
-                                     help="Date and country of the first \
-                                           movie release",
+                                     help="Date and country of the first movie release",
                                      value="July 16, 2010 (United States)")
 
         # Required fields notice
